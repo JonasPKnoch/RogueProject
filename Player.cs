@@ -32,11 +32,21 @@ namespace DungeonGenerationDemo
         public Player(Point origin)
         {
             Coordinates = origin;
+
+            BackgroundColor = ConsoleColor.Black;
+            ForegroundColor = ConsoleColor.White;
         }
 
         public void Paint() 
-        { 
+        {
+            Console.BackgroundColor = BackgroundColor;
+            Console.ForegroundColor = ForegroundColor;
 
+            Console.SetCursorPosition(Coordinates.X, Coordinates.Y);
+            Console.Write(Display);
+
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.DarkGray;
         }
 
         public bool Collision(int x, int y) 
