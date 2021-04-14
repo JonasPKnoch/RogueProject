@@ -18,10 +18,10 @@ namespace DungeonGenerationDemo
 
     class Generator
     {
-        Tile[,] grid { get; }
-        int width { get; }
-        int height { get; }
-        List<Room> rooms { get; }
+        public Tile[,] grid { get; }
+        public int width { get; }
+        public int height { get; }
+        public List<Room> rooms { get; }
 
         private Random rand;
         private int sets;
@@ -159,7 +159,7 @@ namespace DungeonGenerationDemo
             return false;
         }
 
-        private class Room
+        public class Room
         {
             public int minX;
             public int minY;

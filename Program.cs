@@ -8,7 +8,7 @@ namespace DungeonGenerationDemo
         {
             Dungeon game = new Dungeon();
 
-            Console.SetCursorPosition(0, Console.WindowHeight - 4); 
+            Console.SetCursorPosition(0, Console.WindowHeight - 7); 
         }
     }
 }

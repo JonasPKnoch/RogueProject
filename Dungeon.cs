@@ -10,6 +10,7 @@ namespace DungeonGenerationDemo
     {
         public char[,] Map;
         public Generator gen;
+        public Player player;
 
         public Dungeon(char[,] map)
         {
@@ -22,7 +23,11 @@ namespace DungeonGenerationDemo
             gen.Generate(4);
             gen.Draw();
 
+            Point origin = new Point(gen.rooms[0].minX + 1, gen.rooms[0].minY + 1);
 
+            player = new Player(origin);
+
+            player.Paint();
         }
 
         public void Paint()
