@@ -9,10 +9,20 @@ namespace DungeonGenerationDemo
     class Dungeon
     {
         public char[,] Map;
+        public Generator gen;
 
         public Dungeon(char[,] map)
         {
             Map = map;
+        }
+
+        public Dungeon()
+        {
+            Generator gen = new Generator(Console.WindowWidth - 10, Console.WindowHeight - 5);
+            gen.Generate(4);
+            gen.Draw();
+
+
         }
 
         public void Paint()

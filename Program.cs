@@ -6,11 +6,9 @@ namespace DungeonGenerationDemo
     {
         static void Main(string[] args)
         {
-            Generator gen = new Generator(150, 150);
-            gen.Generate(35);
-            gen.Draw();
+            Dungeon game = new Dungeon();
 
-            Console.SetCursorPosition(0, 150); 
+            Console.SetCursorPosition(0, Console.WindowHeight - 4); 
         }
     }
 }

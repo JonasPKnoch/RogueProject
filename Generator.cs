@@ -18,11 +18,12 @@ namespace DungeonGenerationDemo
 
     class Generator
     {
-        private Tile[,] grid;
-        private int width;
-        private int height;
+        Tile[,] grid { get; }
+        int width { get; }
+        int height { get; }
+        List<Room> rooms { get; }
+
         private Random rand;
-        private List<Room> rooms;
         private int sets;
 
         public Generator(int width, int height)
