@@ -22,10 +22,20 @@ namespace DungeonGenerationDemo
 
 
     }
-    class Player : ITempTile
+    interface ICreature : ITempTile
+    {
+        int Health { get; set; }
+        int Attack { get; set; }
+        List<ITempTile> Loot { get; set; }
+        bool Move(Point destination);
+    }
+    class Player : ICreature
     {
         public Point Coordinates { get; }
         public char Display { get; } = '☺';
+        public int Health { get; set; }
+        public int Attack { get; set; }
+        public List<ITempTile> Loot { get; set; }
         public ConsoleColor BackgroundColor { get; set; }
         public ConsoleColor ForegroundColor { get; set; }
 
@@ -47,6 +57,11 @@ namespace DungeonGenerationDemo
 
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.DarkGray;
+        }
+
+        public bool Move(Point destination)
+        {
+            return false;
         }
 
         public bool Collision(int x, int y) 
