@@ -7,74 +7,39 @@ using System.Diagnostics;
 
 namespace DungeonGenerationDemo
 {
-    public enum Tile
-    {
-        EMTPY,
-        PATH,
-        ROOM,
-        DOOR,
-        GOLD
-    }
-
     class Generator
     {
-        private Tile[,] grid;
+        private Dungeon dungeon;
+        private Random rand;
         private int width;
         private int height;
-        private Random rand;
         private List<Room> rooms;
         private int sets;
 
         public Generator(int width, int height)
         {
+            dungeon = new Dungeon(width, height);
             this.width = width;
             this.height = height;
-            grid = new Tile[width, height];
             rand = new Random();
             rooms = new List<Room>();
+        }
+
+        public Dungeon GetDungeon()
+        {
+            return dungeon;
         }
 
         public void Generate(int count)
         {
             for (int i = 0; i < count; i++)
-            {
                 new Room(this, rand.Next(8, 20), rand.Next(4, 10));
-            }
 
-            rooms[0].Connect(rooms[1]);
-        }
-
-        public void Draw()
-        {
-            StringBuilder col = new StringBuilder();
-            for (int i = 0; i < height; i++)
+            foreach(Room el in rooms)
             {
-                col.Clear();
-                for(int j = 0; j < width; j++)
-                {
-                    char c = '?';
-                    switch(grid[j, i])
-                    {
-                        case Tile.EMTPY:
-                            c = ' ';
-                            break;
-                        case Tile.ROOM:
-                            c = '.';
-                            break;
-                        case Tile.DOOR:
-                            c = '+';
-                            break;
-                        case Tile.PATH:
-                            c = '#';
-                            break;
-                        case Tile.GOLD:
-                            c = 'g';
-                            break;
-                    }
-                    col.Append(c);
-                }
-                Console.SetCursorPosition(0, i);
-                Console.Write(col);
+                Room near = nearest(el);
+                if(near != null)
+                    el.Connect(near);
             }
         }
 
@@ -85,10 +50,10 @@ namespace DungeonGenerationDemo
 
         private void path(Room r1, Room r2)
         {
-            int x1 = (int)((r1.minX + r1.maxX) * 0.5);
-            int y1 = (int)((r1.minY + r1.maxY) * 0.5);
-            int x2 = (int)((r2.minX + r2.maxX) * 0.5);
-            int y2 = (int)((r2.minY + r2.maxY) * 0.5);
+            int x1 = r1.centerX;
+            int y1 = r1.centerY;
+            int x2 = r2.centerX;
+            int y2 = r2.centerY;
 
             int xDif = x2 - x1;
             int yDif = y2 - y1;
@@ -98,9 +63,8 @@ namespace DungeonGenerationDemo
 
         private void path(int x, int y, int travelX, int travelY)
         {
-            if (grid[x, y] == Tile.EMTPY)
-                grid[x, y] = Tile.PATH;
-
+            if (dungeon.IsEmpty(x, y))
+                dungeon.PlaceObject(StaticTile.Path(x, y), x, y);
 
             List<int> moves = new List<int>();
 
@@ -141,7 +105,12 @@ namespace DungeonGenerationDemo
 
             foreach(Room el in rooms)
             {
-                
+                int elDist = (int) (Math.Pow(el.centerX - room.centerX, 2) + Math.Pow(el.centerY - room.centerY, 2));
+                if (el != room && !el.connected.Contains(room) && elDist < nearestDist)
+                {
+                    nearestDist = elDist;
+                    nearest = el;
+                }
             }
 
             return nearest;
@@ -164,8 +133,10 @@ namespace DungeonGenerationDemo
             public int minY;
             public int maxX;
             public int maxY;
+            public int centerX;
+            public int centerY;
             public int Set;
-            private List<Room> connected;
+            public List<Room> connected;
             private Generator gen;
 
             public Room(Generator gen, int width, int height)
@@ -183,6 +154,9 @@ namespace DungeonGenerationDemo
                     maxX = minX + width;
                     maxY = minY + height;
                 } while (gen.anyCollide(this));
+
+                this.centerX = (int)((minX + maxX) * 0.5);
+                this.centerY = (int)((minY + maxY) * 0.5);
 
                 Place();
             }
@@ -243,14 +217,7 @@ namespace DungeonGenerationDemo
                 for (int i = 0; i < width; i++)
                 {
                     for (int j = 0; j < height; j++)
-                    {
-                        gen.grid[minX + i, minY + j] = Tile.ROOM;
-                    }
-                }
-
-                for (int i = 0; i < gen.rand.Next(0, 3); i++)
-                {
-                    gen.grid[gen.rand.Next(minX, maxX), gen.rand.Next(minY, maxY)] = Tile.GOLD;
+                        gen.dungeon.PlaceObject(StaticTile.Floor(minX + i, minY + j), minX + i, minY + j);
                 }
             }
         }
