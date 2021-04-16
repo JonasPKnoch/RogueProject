@@ -36,6 +36,10 @@ namespace DungeonGenerationDemo
                 return (X == p.X) && (Y == p.Y);
             }
         }
+        public override int GetHashCode()
+        {
+            return (X << 2) ^ Y;
+        }
 
         public static bool operator ==(Point x, Point y)
         {
