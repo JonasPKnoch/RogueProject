@@ -26,6 +26,11 @@ namespace DungeonGenerationDemo
             return new StaticTile(row, col, false, '#');
         }
 
+        public static StaticTile Door(int row, int col)
+        {
+            return new StaticTile(row, col, false, 'X');
+        }
+
         public StaticTile(int row, int col, bool solid, char character = '?', 
             ConsoleColor foreground = ConsoleColor.White, 
             ConsoleColor background = ConsoleColor.Black)
