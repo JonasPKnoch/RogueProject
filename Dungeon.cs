@@ -173,7 +173,7 @@ namespace DungeonGenerationDemo
                 for (int j = 0; j < Height; j++)
                 {
                     if (!IsEmpty(new Point(i, j))
-                        //&& map[i,j].Peek().Solid
+                        && !map[i,j].Peek().Solid
                         )
                     {
                         Player = new Player(new Point(i, j));

@@ -7,6 +7,8 @@ namespace DungeonGenerationDemo
     {
         static void Main(string[] args)
         {
+            Console.CursorVisible = false;
+
             Generator gen = new Generator(100, 30);
             gen.Generate(10);
             Dungeon dungeon = gen.GetDungeon();
