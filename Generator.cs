@@ -34,7 +34,7 @@ namespace DungeonGenerationDemo
         private const int MIN_ROOM_HEIGHT = 4;
         private const int MAX_ROOM_HEIGHT = 10;
         //Gives the odds the path will change direction. Lower number makes paths curvier
-        private const int PATH_DIR_CHANGE = 4;
+        private const int PATH_DIR_CHANGE = 0;
 
         private Dungeon dungeon;
         private Tile[,] grid;
