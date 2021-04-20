@@ -69,7 +69,7 @@ namespace DungeonGenerationDemo
             Console.Write(character);
         }
 
-        public bool OnCollision()
+        public bool OnCollision(IGameObject collider)
         {
             return true;
         }

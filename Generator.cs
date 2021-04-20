@@ -43,6 +43,7 @@ namespace DungeonGenerationDemo
         private int height;
         private List<Room> rooms;
         private int sets;
+        private List<Monster> monsters; // TODO: if there's time, this will be used to help make monsters move
 
         public Generator(int width, int height)
         {
@@ -52,6 +53,7 @@ namespace DungeonGenerationDemo
             this.height = height;
             rand = new Random();
             rooms = new List<Room>();
+            dungeon.rand = rand;
         }
 
         /// <summary>
@@ -82,7 +84,11 @@ namespace DungeonGenerationDemo
         public void Generate(int count)
         {
             for (int i = 0; i < count; i++)
+            {
                 new Room(this, rand.Next(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH), rand.Next(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT));
+                Point roomCenter = rooms.Last().Center;
+                dungeon.PlaceObject(new Monster(roomCenter, rand), roomCenter);
+            }
 
             foreach (Room el in rooms)
             {

@@ -16,6 +16,7 @@ namespace DungeonGenerationDemo
         private Stack<IGameObject>[,] map { get; }
         public int Width { get; }
         public int Height { get; }
+        public Random rand { get; set; }
 
         public Player Player { get; set; }
 
@@ -152,14 +153,48 @@ namespace DungeonGenerationDemo
         /// </summary>
         /// <param name="direction"></param>
         /// <returns></returns>
-        public bool MovePlayer(Cardinal direction)
+        public bool MovePlayer(ConsoleKey key)
         {
-            Point destination = Player.Point + DirectionVectors[(int)direction];
-            if (!IsEmpty(destination) &&
-                !map[destination.Col, destination.Row].Peek().Solid &&
-                map[destination.Col, destination.Row].Peek().OnCollision()) // if the object gets destroyed/picked up it returns true
+            Cardinal newDirection;
+
+            switch (key)
             {
-                MoveObject(Player.Point, destination);
+                case ConsoleKey.A:
+                    newDirection = Cardinal.Left;
+                    break;
+                case ConsoleKey.D:
+                    newDirection = Cardinal.Right;
+                    break;
+                case ConsoleKey.W:
+                    newDirection = Cardinal.Up;
+                    break;
+                case ConsoleKey.S:
+                    newDirection = Cardinal.Down;
+                    break;
+                case ConsoleKey.X:
+                    newDirection = Cardinal.None;
+                    break;
+                default:
+                    newDirection = Cardinal.None;
+                    break;
+            }
+
+            Point destination = Player.Point + DirectionVectors[(int)newDirection];
+            if (!IsEmpty(destination) &&
+                !map[destination.Col, destination.Row].Peek().Solid)
+            {
+                IGameObject target = map[destination.Col, destination.Row].Peek();
+                // if the object gets destroyed/picked up it returns true)
+                if (target.OnCollision(Player))
+                {
+                    if (!(target is StaticTile)) { map[destination.Col, destination.Row].Pop(); }
+                    
+                    MoveObject(Player.Point, destination);
+                }
+                else
+                {
+                    return Player.OnCollision(target); // returns true if player dies
+                }
             }
             return false;
         }
@@ -176,7 +211,7 @@ namespace DungeonGenerationDemo
                         && !map[i,j].Peek().Solid
                         )
                     {
-                        Player = new Player(new Point(i, j));
+                        Player = new Player(new Point(i, j), rand);
                         map[i, j].Push(Player);
                         i = Width; j = Height;
                     }

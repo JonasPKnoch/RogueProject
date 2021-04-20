@@ -28,6 +28,6 @@ namespace DungeonGenerationDemo
         /// Does what the object does when the player interacts with the space it's on
         /// </summary>
         /// <returns>Returns true if the action results in the player being able to move</returns>
-        public bool OnCollision();
+        public bool OnCollision(IGameObject collider);
     }
 }

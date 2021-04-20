@@ -12,7 +12,9 @@ namespace DungeonGenerationDemo
     interface ICreature : IGameObject
     {
         int Health { get; set; }
-        int Attack { get; set; }
+        int Attack { get; set; } // Used to roll to hit, and the amount of damage
+        int Defense { get; set; }
+        Random Rand { get; set; }
         List<IGameObject> Loot { get; set; }
 
         /// <summary>
@@ -35,15 +37,34 @@ namespace DungeonGenerationDemo
 
         public Point Point { get; set; }
         public char Display { get; } = '☺';
-        public int Health { get; set; }
-        public int Attack { get; set; }
+        public int Health { get; set; } = 10;
+
+        private int attack;
+        public int Attack { get
+            {
+                return Rand.Next(0, attack);
+            }
+            set { attack = value; } }
+        private int defense;
+        public int Defense
+        {
+            get
+            {
+                return Rand.Next(0, defense);
+            }
+            set { defense = value; }
+        }
+        public Random Rand { get; set; }
         public List<IGameObject> Loot { get; set; }
         public ConsoleColor BackgroundColor { get; set; }
         public ConsoleColor ForegroundColor { get; set; }
 
-        public Player(Point origin)
+        public Player(Point origin, Random rand)
         {
             Point = origin;
+            this.Rand = rand;
+            Attack = 4;
+            Defense = 4;
 
             BackgroundColor = ConsoleColor.Black;
             ForegroundColor = ConsoleColor.White;
@@ -77,10 +98,22 @@ namespace DungeonGenerationDemo
             return obstacle == Point;
         }
 
-        public bool OnCollision()
+        /// <summary>
+        /// If the passed object is something that can attack, then it tries to hit this, reduces hit points if it does
+        /// and returns true if the hitpoints drop to 0
+        /// </summary>
+        /// <param name="collider"></param>
+        /// <returns></returns>
+        public bool OnCollision(IGameObject collider)
         {
-            return false;
+            if (!(collider is ICreature)) { return false; } // shouldn't happen, but you never know
 
+            int attackRoll = ((ICreature)collider).Attack;
+            if (attackRoll >= Defense)
+            {
+                Health -= attackRoll;
+            }
+            return Health <= 0;
         }
     }
 }
