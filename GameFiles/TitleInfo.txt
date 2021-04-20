@@ -1,0 +1,18 @@
+   Brought to you by...
+Jonas K. Jason L. And Isac Z.
+
+
+Press enter to start the game
+Control + L to load a game,  
+and H to view high scores.
+
+
+
+
+Game instructions:
+
+The object of the game is to
+explore the dungeons!
+
+Use the arrow keys to move
+around.

@@ -17,7 +17,7 @@ namespace DungeonGenerationDemo
         public char Display { get; } = 'Ϫ';
         public int Health { get; set; }
         public int Attack { get; set; }
-        public List<ITempTile> Loot { get; set; }
+        public List<IGameObject> Loot { get; set; }
         public ConsoleColor BackgroundColor { get; set; }
         public ConsoleColor ForegroundColor { get; set; }
 

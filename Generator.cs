@@ -138,10 +138,11 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(obj, p);
         }
 
-        private bool pointValid(int x, int y)
-        {
-            return (0 < x && x < width) && (0 < y && y < height);
-        }
+        //Not being used
+        //private bool pointValid(int x, int y)
+        //{
+        //    return (0 < x && x < width) && (0 < y && y < height);
+        //}
 
         private Room nearest(Room room)
         {
@@ -369,7 +370,6 @@ namespace DungeonGenerationDemo
                         gen.place(Tile.FLOOR, new Point(MinC.Col + i, MinC.Row + j));
                     }
                 }
-
                 for(int i = 1; i < width - 1; i++)
                 {
                     gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row));

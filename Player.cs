@@ -6,32 +6,6 @@ using System.Threading.Tasks;
 
 namespace DungeonGenerationDemo
 {
-    interface ITempTile
-    {
-
-        Point Coordinates { get; protected set; }
-
-        char Display { get; } // the symbol that will be printed on the board to represent the object
-
-        ConsoleColor BackgroundColor { get; set; }
-        ConsoleColor ForegroundColor { get; set; }
-
-        /// <summary>
-        /// Draws the object on the board at its coordinates
-        /// </summary>
-        void Paint();
-
-        /// <summary>
-        /// Determines whether the provided point intersects with this object
-        /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <returns></returns>
-        bool Collision(Point obstacle);
-
-
-    }
-
     /// <summary>
     /// Objects that can move and die
     /// </summary>
@@ -39,7 +13,7 @@ namespace DungeonGenerationDemo
     {
         int Health { get; set; }
         int Attack { get; set; }
-        List<ITempTile> Loot { get; set; }
+        List<IGameObject> Loot { get; set; }
 
         /// <summary>
         /// 
@@ -63,7 +37,7 @@ namespace DungeonGenerationDemo
         public char Display { get; } = '☺';
         public int Health { get; set; }
         public int Attack { get; set; }
-        public List<ITempTile> Loot { get; set; }
+        public List<IGameObject> Loot { get; set; }
         public ConsoleColor BackgroundColor { get; set; }
         public ConsoleColor ForegroundColor { get; set; }
 
