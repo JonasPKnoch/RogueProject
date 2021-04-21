@@ -219,5 +219,11 @@ namespace DungeonGenerationDemo
             }
 
         }
+        public void DisplayPlayerHealth(int row, int col)
+        {
+            Console.SetCursorPosition(45, 33);
+            Console.Write($"{Player.Health,-2}");
+
+        }
     }
 }

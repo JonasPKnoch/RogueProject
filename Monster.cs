@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace DungeonGenerationDemo
 {
@@ -89,11 +89,31 @@ namespace DungeonGenerationDemo
             if (!(collider is ICreature)) { return false; } // shouldn't happen, but you never know
 
             int attackRoll = ((ICreature)collider).Attack;
+            Console.SetCursorPosition(84, 33);
             if (attackRoll >= Defense)
             {
                 Health -= attackRoll;
+
+                Console.Write($"Monster hit for {attackRoll}  ");
+                hitFlash();
+            }
+            else
+            {
+                Console.Write("Player missed               ");
             }
             return Health <= 0;
+        }
+
+        private void hitFlash()
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.SetCursorPosition(Point.Col, Point.Row);
+            Console.Write(Display);
+
+            Thread.Sleep(50);
+
+            Paint();
         }
     }
 }

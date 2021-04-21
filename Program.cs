@@ -10,7 +10,7 @@ namespace DungeonGenerationDemo
         static FileManager fm = new FileManager();
         static Generator gen = new Generator(100, 30);
         static Dungeon dungeon = gen.GetDungeon();
-        static string[] labels = { "Level: ", "Player: ", "Score: "};
+        static string[] labels = { "Level: ", "Player: ", "HP: ", "Score: "};
 
         static void Main(string[] args)
         {
@@ -30,7 +30,7 @@ namespace DungeonGenerationDemo
         {
             string userName = GetUserName();
             Console.SetCursorPosition(7, 33);
-            Console.WriteLine($"{labels[0] ,-20} {labels[1] + userName,-20} {labels[2] ,-20}");
+            Console.WriteLine($"{labels[0] ,-20} {labels[1] + userName,-12} {labels[2],-6} {labels[3] ,-20}");
 
             dungeon.PlacePlayer(); // TODO: test code
             dungeon.PaintAll();
@@ -39,6 +39,7 @@ namespace DungeonGenerationDemo
 
             do
             {
+                dungeon.DisplayPlayerHealth(45, 33);
                 key = Console.ReadKey(true).Key;
 
                 if (key == ConsoleKey.Escape) { break; }
@@ -46,6 +47,8 @@ namespace DungeonGenerationDemo
                 if (dungeon.MovePlayer(key)) { break; }
 
             } while (key != ConsoleKey.Escape);
+
+            dungeon.DisplayPlayerHealth(45, 33);
         }
 
         //Isac Z
