@@ -178,15 +178,15 @@ namespace DungeonGenerationDemo
                     newDirection = Cardinal.None;
                     break;
                 default:
-                    newDirection = Cardinal.None;
-                    break;
+                    return false;
             }
 
             Point destination = Player.Point + DirectionVectors[(int)newDirection];
+            IGameObject target = map[destination.Col, destination.Row].Peek();
             if (!IsEmpty(destination) &&
-                !map[destination.Col, destination.Row].Peek().Solid)
+                !target.Solid && 
+                target.Point != Player.Point)
             {
-                IGameObject target = map[destination.Col, destination.Row].Peek();
                 // if the object gets destroyed/picked up it returns true)
                 if (target.OnCollision(Player))
                 {
