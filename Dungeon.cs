@@ -17,6 +17,7 @@ namespace DungeonGenerationDemo
         public int Width { get; }
         public int Height { get; }
         public Random rand { get; set; }
+        public List<Monster> monsters { get; set; }
 
         public Player Player { get; set; }
 
@@ -127,7 +128,7 @@ namespace DungeonGenerationDemo
         /// <param name="origin"></param>
         /// <param name="Destination"></param>
         /// <returns></returns>
-        public bool MoveObject(Point origin, Point Destination)
+        public bool MoveCreature(Point origin, Point Destination)
         {
 
             // If there's time for the chaos of local methods in local delegates
@@ -136,11 +137,13 @@ namespace DungeonGenerationDemo
 
             //bool inside(string stuff) { return false; }
 
-            map[Destination.Col, Destination.Row].Push(map[Player.Point.Col, Player.Point.Row].Pop());
+            ICreature tempObject = (ICreature)(map[origin.Col, origin.Row].Pop());
 
-            PaintAt(Player.Point);
+            tempObject.Move(Destination);
 
-            Player.Point = Destination;
+            map[Destination.Col, Destination.Row].Push(tempObject);
+
+            PaintAt(origin);
 
             PaintAt(Destination);
 
@@ -187,15 +190,20 @@ namespace DungeonGenerationDemo
                 // if the object gets destroyed/picked up it returns true)
                 if (target.OnCollision(Player))
                 {
-                    if (!(target is StaticTile)) { map[destination.Col, destination.Row].Pop(); }
-                    
-                    MoveObject(Player.Point, destination);
+                    if (!(target is StaticTile)) 
+                    {
+                        IGameObject tempObject = map[destination.Col, destination.Row].Pop(); 
+                        if (target is Monster) { monsters.Remove((Monster)tempObject); }
+                    }
+
+                    MoveCreature(Player.Point, destination);
                 }
                 else
                 {
                     return Player.OnCollision(target); // returns true if player dies
                 }
             }
+            MoveMonsters();
             return false;
         }
 
@@ -219,11 +227,47 @@ namespace DungeonGenerationDemo
             }
 
         }
+
         public void DisplayPlayerHealth(int row, int col)
         {
             Console.SetCursorPosition(45, 33);
             Console.Write($"{Player.Health,-2}");
 
+        }
+
+        public void MoveMonsters()
+        {
+            for( int i = 0; i < monsters.Count; i++)
+            {
+                Monster monster = monsters[i];
+                // The monsters only move if the player is within 6 tiles
+                if (Player.Point.Distance(monster.Point) > 6) { monster.JustMoved = false; continue; }
+
+                // Let's only have the monster move every other turn
+                if (!monster.JustMoved)
+                {
+                    // moving it toward player
+                    Point newDirection = monster.Point.Normalize(Player.Point);
+
+                    Point destination = monster.Point + newDirection;
+                    if (!IsEmpty(destination) &&
+                        !map[destination.Col, destination.Row].Peek().Solid)
+                    {
+                        IGameObject target = map[destination.Col, destination.Row].Peek();
+                        // if the object gets destroyed/picked up it returns true)
+                        if (target.OnCollision(monster))
+                        {
+                            if (!(target is StaticTile)) { map[destination.Col, destination.Row].Pop(); }
+
+                            MoveCreature(monster.Point, destination);
+                            monsters[i].Move(destination); // TODO: make sure everything points to the same object so I don't have to do this everywhere
+                        }
+                    }
+
+                    monsters[i].JustMoved = true;
+                }
+                else { monsters[i].JustMoved = false; }
+            }
         }
     }
 }

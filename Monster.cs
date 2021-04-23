@@ -39,6 +39,7 @@ namespace DungeonGenerationDemo
         public List<IGameObject> Loot { get; set; }
         public ConsoleColor BackgroundColor { get; set; }
         public ConsoleColor ForegroundColor { get; set; }
+        public bool JustMoved = false;
 
         public Monster(Point origin, Random rand)
         {
@@ -65,7 +66,8 @@ namespace DungeonGenerationDemo
 
         public bool Move(Point destination)
         {
-            return false;
+            Point = destination;
+            return true;
         }
 
         public bool Collision(int x, int y)

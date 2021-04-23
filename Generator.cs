@@ -53,6 +53,8 @@ namespace DungeonGenerationDemo
             this.height = height;
             rand = new Random();
             rooms = new List<Room>();
+            monsters = new List<Monster>();
+            dungeon.monsters = monsters;
             dungeon.rand = rand;
         }
 
@@ -87,7 +89,9 @@ namespace DungeonGenerationDemo
             {
                 new Room(this, rand.Next(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH), rand.Next(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT));
                 Point roomCenter = rooms.Last().Center;
-                dungeon.PlaceObject(new Monster(roomCenter, rand), roomCenter);
+                Monster newMonster = new Monster(roomCenter, rand);
+                dungeon.PlaceObject(newMonster, roomCenter);
+                monsters.Add(newMonster);
             }
 
             foreach (Room el in rooms)
