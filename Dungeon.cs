@@ -137,6 +137,8 @@ namespace DungeonGenerationDemo
 
             //bool inside(string stuff) { return false; }
 
+            if (map[origin.Col, origin.Row].Peek() is StaticTile) { return false; }
+
             ICreature tempObject = (ICreature)(map[origin.Col, origin.Row].Pop());
 
             tempObject.Move(Destination);
