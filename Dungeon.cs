@@ -16,8 +16,8 @@ namespace DungeonGenerationDemo
         private Stack<IGameObject>[,] map { get; }
         public int Width { get; }
         public int Height { get; }
-        public Random rand { get; set; }
-        public List<Monster> monsters { get; set; }
+        public Point Offset { get; set; }
+        public bool atExit { get; set; }
 
         public Player Player { get; set; }
 
@@ -128,7 +128,7 @@ namespace DungeonGenerationDemo
         /// <param name="origin"></param>
         /// <param name="Destination"></param>
         /// <returns></returns>
-        public bool MoveCreature(Point origin, Point Destination)
+        public bool MoveObject(Point origin, Point Destination)
         {
 
             // If there's time for the chaos of local methods in local delegates
@@ -137,15 +137,11 @@ namespace DungeonGenerationDemo
 
             //bool inside(string stuff) { return false; }
 
-            if (map[origin.Col, origin.Row].Peek() is StaticTile) { return false; }
+            map[Destination.Col, Destination.Row].Push(map[Player.Point.Col, Player.Point.Row].Pop());
 
-            ICreature tempObject = (ICreature)(map[origin.Col, origin.Row].Pop());
+            PaintAt(Player.Point);
 
-            tempObject.Move(Destination);
-
-            map[Destination.Col, Destination.Row].Push(tempObject);
-
-            PaintAt(origin);
+            Player.Point = Destination;
 
             PaintAt(Destination);
 
@@ -158,54 +154,15 @@ namespace DungeonGenerationDemo
         /// </summary>
         /// <param name="direction"></param>
         /// <returns></returns>
-        public bool MovePlayer(ConsoleKey key)
+        public bool MovePlayer(Cardinal direction)
         {
-            Cardinal newDirection;
-
-            switch (key)
-            {
-                case ConsoleKey.A:
-                    newDirection = Cardinal.Left;
-                    break;
-                case ConsoleKey.D:
-                    newDirection = Cardinal.Right;
-                    break;
-                case ConsoleKey.W:
-                    newDirection = Cardinal.Up;
-                    break;
-                case ConsoleKey.S:
-                    newDirection = Cardinal.Down;
-                    break;
-                case ConsoleKey.X:
-                    newDirection = Cardinal.None;
-                    break;
-                default:
-                    return false;
-            }
-
-            Point destination = Player.Point + DirectionVectors[(int)newDirection];
-            IGameObject target = map[destination.Col, destination.Row].Peek();
+            Point destination = Player.Point + DirectionVectors[(int)direction];
             if (!IsEmpty(destination) &&
-                !target.Solid && 
-                target.Point != Player.Point)
+                !map[destination.Col, destination.Row].Peek().Solid &&
+                map[destination.Col, destination.Row].Peek().OnCollision()) // if the object gets destroyed/picked up it returns true
             {
-                // if the object gets destroyed/picked up it returns true)
-                if (target.OnCollision(Player))
-                {
-                    if (!(target is StaticTile)) 
-                    {
-                        IGameObject tempObject = map[destination.Col, destination.Row].Pop(); 
-                        if (target is Monster) { monsters.Remove((Monster)tempObject); }
-                    }
-
-                    MoveCreature(Player.Point, destination);
-                }
-                else
-                {
-                    return Player.OnCollision(target); // returns true if player dies
-                }
+                MoveObject(Player.Point, destination);
             }
-            MoveMonsters();
             return false;
         }
 
@@ -221,55 +178,13 @@ namespace DungeonGenerationDemo
                         && !map[i,j].Peek().Solid
                         )
                     {
-                        Player = new Player(new Point(i, j), rand);
+                        Player = new Player(new Point(i, j));
                         map[i, j].Push(Player);
                         i = Width; j = Height;
                     }
                 }
             }
 
-        }
-
-        public void DisplayPlayerHealth(int row, int col)
-        {
-            Console.SetCursorPosition(45, 33);
-            Console.Write($"{Player.Health,-2}");
-
-        }
-
-        public void MoveMonsters()
-        {
-            for( int i = 0; i < monsters.Count; i++)
-            {
-                Monster monster = monsters[i];
-                // The monsters only move if the player is within 6 tiles
-                if (Player.Point.Distance(monster.Point) > 6) { monster.JustMoved = false; continue; }
-
-                // Let's only have the monster move every other turn
-                if (!monster.JustMoved)
-                {
-                    // moving it toward player
-                    Point newDirection = monster.Point.Normalize(Player.Point);
-
-                    Point destination = monster.Point + newDirection;
-                    if (!IsEmpty(destination) &&
-                        !map[destination.Col, destination.Row].Peek().Solid)
-                    {
-                        IGameObject target = map[destination.Col, destination.Row].Peek();
-                        // if the object gets destroyed/picked up it returns true)
-                        if (target.OnCollision(monster))
-                        {
-                            if (!(target is StaticTile)) { map[destination.Col, destination.Row].Pop(); }
-
-                            MoveCreature(monster.Point, destination);
-                            monsters[i].Move(destination); // TODO: make sure everything points to the same object so I don't have to do this everywhere
-                        }
-                    }
-
-                    monsters[i].JustMoved = true;
-                }
-                else { monsters[i].JustMoved = false; }
-            }
         }
     }
 }
