@@ -84,6 +84,7 @@ namespace DungeonGenerationDemo
 
         public bool Move(Point destination)
         {
+            //System.Diagnostics.Debug.Print($"Player internal move: from {this.Point}, to {destination}");
             Point = destination;
             return true;
         }
@@ -107,6 +108,7 @@ namespace DungeonGenerationDemo
         public bool OnCollision(IGameObject collider)
         {
             if (!(collider is ICreature)) { return false; } // shouldn't happen, but you never know
+            //System.Diagnostics.Debug.Print($"Attacking player: Monster at {collider.Point}, player at {this.Point}");
 
             int attackRoll = ((ICreature)collider).Attack;
             Console.SetCursorPosition(64, 33);

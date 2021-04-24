@@ -195,7 +195,7 @@ namespace DungeonGenerationDemo
                     if (!(target is StaticTile)) 
                     {
                         IGameObject tempObject = map[destination.Col, destination.Row].Pop(); 
-                        if (target is Monster) { monsters.Remove((Monster)tempObject); }
+                        if (tempObject is Monster) { monsters.Remove((Monster)tempObject); }
                     }
 
                     MoveCreature(Player.Point, destination);
@@ -242,27 +242,30 @@ namespace DungeonGenerationDemo
             for( int i = 0; i < monsters.Count; i++)
             {
                 Monster monster = monsters[i];
+                Monster mapMonster = (Monster)map[monster.Point.Col, monster.Point.Row].Peek();
+                //System.Diagnostics.Debug.Print($"Monster check: index {i} list {monster.Point} map {mapMonster.Point}");
                 // The monsters only move if the player is within 6 tiles
-                if (Player.Point.Distance(monster.Point) > 6) { monster.JustMoved = false; continue; }
+                if (Player.Point.Distance(mapMonster.Point) > 6) { mapMonster.JustMoved = false; continue; }
 
                 // Let's only have the monster move every other turn
-                if (!monster.JustMoved)
+                if (!mapMonster.JustMoved)
                 {
                     // moving it toward player
-                    Point newDirection = monster.Point.Normalize(Player.Point);
+                    Point newDirection = mapMonster.Point.Normalize(Player.Point);
 
-                    Point destination = monster.Point + newDirection;
+                    Point destination = mapMonster.Point + newDirection;
+                    //System.Diagnostics.Debug.Print($"Monster move: index {i} direction {newDirection} destination {destination}");
                     if (!IsEmpty(destination) &&
                         !map[destination.Col, destination.Row].Peek().Solid)
                     {
                         IGameObject target = map[destination.Col, destination.Row].Peek();
                         // if the object gets destroyed/picked up it returns true)
-                        if (target.OnCollision(monster))
+                        if (target.OnCollision(mapMonster))
                         {
                             if (!(target is StaticTile)) { map[destination.Col, destination.Row].Pop(); }
 
-                            MoveCreature(monster.Point, destination);
-                            monsters[i].Move(destination); // TODO: make sure everything points to the same object so I don't have to do this everywhere
+                            MoveCreature(mapMonster.Point, destination);
+                            //monsters[i].Move(destination); // TODO: make sure everything points to the same object so I don't have to do this everywhere
                         }
                     }
 

@@ -73,20 +73,19 @@ namespace DungeonGenerationDemo
         }
         public Point Normalize(Point target)
         {
+            //System.Diagnostics.Debug.Print($"point normalize: this {this} that {target}");
             Point difference = new Point(target.Col - Col, target.Row - Row);
 
-            // I've somehow forgotten all the math I've ever learned in this moment so this might look dumb
-            if(difference.Col == difference.Row) { return new Point(difference.Col, 0); } // It'll just go vertically rather than diagonally
+            double distance = Math.Sqrt(Math.Pow(difference.Col, 2d) + Math.Pow(difference.Row, 2d));
 
-            double distanceForStraightLines = Math.Abs(difference.Col) + Math.Abs(difference.Row);
+            Point direction = new Point((int)Math.Round(difference.Col / distance), (int)Math.Round(difference.Row / distance));
 
-            return new Point((int)Math.Round(difference.Col / distanceForStraightLines),
-                (int)Math.Round(difference.Row / distanceForStraightLines));
+            if (Math.Abs(direction.Col) == Math.Abs(direction.Row))  // Diagonals turn into vertical moves
+            {
+                direction = new Point(direction.Col, 0);
+            }
 
-            // This is if diagonals are fine
-            //double distance = Math.Sqrt(Math.Pow(difference.Col, 2d) + Math.Pow(difference.Row, 2d));
-
-            //return new Point((int)Math.Round(difference.Col / distance), (int)Math.Round(difference.Row / distance));
+            return direction;
         }
     }
 }
