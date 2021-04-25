@@ -334,6 +334,7 @@ namespace DungeonGenerationDemo
                             return;
                         case Tile.PATH:
                             originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
+                            firstDoorVisible.AddRange(visible);
                             return;
                     }
                 }
