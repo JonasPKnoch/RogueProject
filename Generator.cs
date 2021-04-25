@@ -114,10 +114,12 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(new Exit(point, dungeon), point);
 
 
-            point = getValidPoint();
+            Room playerRoom = rooms[rand.Next(rooms.Count)];
+            point = playerRoom.Center;
             Player player = new Player(point, dungeon.rand);
             dungeon.Player = player;
             dungeon.PlaceObject(player, point);
+            dungeon.SetVisible(playerRoom.visible, true);
         }
 
         private void place(Tile tile, Point p)
@@ -167,6 +169,13 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(obj, p);
         }
 
+        private void placeDoor(Point p, Room origin, List<Point> visible)
+        {
+            grid[p.Col, p.Row] = Tile.DOOR;
+            gridOrigins[p.Col, p.Row] = origin;
+            dungeon.PlaceObject(new VisibilityDoor(p, dungeon, visible), p);
+        }
+
         private bool pointValid(int x, int y)
         {
             return (0 < x && x < width) && (0 < y && y < height);
@@ -212,12 +221,16 @@ namespace DungeonGenerationDemo
             private int travelRow;
             private bool active;
             private int prev;
+            private List<Point> visible;
+            private List<Point> firstDoorVisible;
 
             public Path(Generator gen, Room r1, Room r2)
             {
                 this.originRoom = r2;
                 this.targetRoom = r1;
                 this.gen = gen;
+                visible = new List<Point>();
+                firstDoorVisible = new List<Point>();
 
                 target = r1.Random();
                 current = r2.Random();
@@ -287,7 +300,9 @@ namespace DungeonGenerationDemo
                     {
                         case Tile.EMPTY:
                             active = true;
-                            gen.place(Tile.DOOR, last, originRoom);
+                            visible.Add(last);
+                            firstDoorVisible.AddRange(originRoom.visible);
+                            gen.placeDoor(last, originRoom, firstDoorVisible);
                             break;
                         case Tile.PATH:
                             originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
@@ -304,11 +319,18 @@ namespace DungeonGenerationDemo
                     {
                         case Tile.EMPTY:
                             gen.place(Tile.PATH, current, originRoom);
+                            visible.Add(current);
                             break;
                         case Tile.WALL:
                             Room foundWall = gen.gridOrigins[current.Col, current.Row];
                             originRoom.Connect(foundWall);
-                            gen.place(Tile.DOOR, current, foundWall);
+                            visible.Add(current);
+
+                            List<Point> doorVisible = new List<Point>(visible);
+                            doorVisible.AddRange(foundWall.visible);
+                            gen.placeDoor(current, foundWall, doorVisible);
+
+                            firstDoorVisible.AddRange(visible);
                             return;
                         case Tile.PATH:
                             originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
@@ -332,6 +354,7 @@ namespace DungeonGenerationDemo
             public Point Center;
             public int Set;
             public List<Room> connected;
+            public List<Point> visible;
             private Generator gen;
 
             public Room(Generator gen, int width, int height)
@@ -343,6 +366,7 @@ namespace DungeonGenerationDemo
                 Debug.Print($"Set: {Set} created. Total: {gen.sets}");
                 gen.rooms.Add(this);
                 connected = new List<Room>();
+                visible = new List<Point>();
 
                 do
                 {
@@ -427,28 +451,38 @@ namespace DungeonGenerationDemo
                 {
                     for (int j = 1; j < height - 1; j++)
                     {
-                        gen.place(Tile.FLOOR, new Point(MinC.Col + i, MinC.Row + j), this);
+                        Point p = new Point(MinC.Col + i, MinC.Row + j);
+                        visible.Add(p);
+                        gen.place(Tile.FLOOR, p, this);
                     }
                 }
 
                 for (int i = 1; i < width - 1; i++)
                 {
-                    gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row), this);
+                    Point p = new Point(MinC.Col + i, MinC.Row);
+                    visible.Add(p);
+                    gen.place(Tile.HOR_WALL, p, this);
                 }
 
                 for (int i = 1; i < width - 1; i++)
                 {
-                    gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row + height - 1), this);
+                    Point p = new Point(MinC.Col + i, MinC.Row + height - 1);
+                    visible.Add(p);
+                    gen.place(Tile.HOR_WALL, p, this);
                 }
 
                 for (int i = 1; i < height - 1; i++)
                 {
-                    gen.place(Tile.VER_WALL, new Point(MinC.Col, MinC.Row + i), this);
+                    Point p = new Point(MinC.Col, MinC.Row + i);
+                    visible.Add(p);
+                    gen.place(Tile.VER_WALL, p, this);
                 }
 
                 for (int i = 1; i < height - 1; i++)
                 {
-                    gen.place(Tile.VER_WALL, new Point(MinC.Col + width - 1, MinC.Row + i), this);
+                    Point p = new Point(MinC.Col + width - 1, MinC.Row + i);
+                    visible.Add(p);
+                    gen.place(Tile.VER_WALL, p, this);
                 }
             }
         }

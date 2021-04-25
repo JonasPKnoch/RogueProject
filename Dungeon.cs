@@ -14,6 +14,7 @@ namespace DungeonGenerationDemo
     class Dungeon
     {
         private Stack<IGameObject>[,] map { get; }
+        private bool[,] visibility { get; }
         public int Width { get; }
         public int Height { get; }
         public Random rand { get; set; }
@@ -32,6 +33,29 @@ namespace DungeonGenerationDemo
             Width = width;
             Height = height;
             map = new Stack<IGameObject>[width, height];
+            visibility = new bool[width, height];
+        }
+
+        /// <summary>
+        /// Makes a list of points in the dungeon visible
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="visible"></param>
+        public void SetVisible(List<Point> points, bool visible)
+        {
+            foreach (Point p in points)
+                SetVisible(p, visible);
+        }
+
+        /// <summary>
+        /// Makes a single point in the dungeon visible
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="visible"></param>
+        public void SetVisible(Point p, bool visible)
+        {
+            visibility[p.Col, p.Row] = visible;
+            PaintAt(p);
         }
 
         /// <summary>
@@ -58,7 +82,7 @@ namespace DungeonGenerationDemo
         {
             Stack<IGameObject> current = map[p.Col, p.Row];
 
-            if (!IsEmpty(new Point(p.Col, p.Row)))
+            if (visibility[p.Col, p.Row] && !IsEmpty(new Point(p.Col, p.Row)))
                 current.Peek().Paint();
         }
 
@@ -138,7 +162,7 @@ namespace DungeonGenerationDemo
 
             //bool inside(string stuff) { return false; }
 
-            if (map[origin.Col, origin.Row].Peek() is StaticTile) { return false; }
+            if (!(map[origin.Col, origin.Row].Peek() is ICreature)) { return false; }
 
             ICreature tempObject = (ICreature)(map[origin.Col, origin.Row].Pop());
 
@@ -193,7 +217,7 @@ namespace DungeonGenerationDemo
                 // if the object gets destroyed/picked up it returns true)
                 if (target.OnCollision(Player))
                 {
-                    if (!(target is StaticTile)) 
+                    if ((target is ICreature)) 
                     {
                         IGameObject tempObject = map[destination.Col, destination.Row].Pop(); 
                         if (tempObject is Monster) { monsters.Remove((Monster)tempObject); }
@@ -263,7 +287,7 @@ namespace DungeonGenerationDemo
                         // if the object gets destroyed/picked up it returns true)
                         if (target.OnCollision(mapMonster))
                         {
-                            if (!(target is StaticTile)) { map[destination.Col, destination.Row].Pop(); }
+                            if ((target is ICreature)) { map[destination.Col, destination.Row].Pop(); }
 
                             MoveCreature(mapMonster.Point, destination);
                             //monsters[i].Move(destination); // TODO: make sure everything points to the same object so I don't have to do this everywhere

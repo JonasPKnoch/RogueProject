@@ -14,7 +14,7 @@ namespace DungeonGenerationDemo
 
         static void Main(string[] args)
         {
-            Console.WindowWidth = 146;
+            //Console.WindowWidth = 146;
             Console.CursorVisible = false;
             
             gen.Generate(6);

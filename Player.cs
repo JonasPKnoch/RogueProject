@@ -36,7 +36,7 @@ namespace DungeonGenerationDemo
         public bool Solid { get; }
 
         public Point Point { get; set; }
-        public char Display { get; } = '☺';
+        public char Display { get; } = '@';
         public int Health { get; set; } = 10;
 
         private int attack;
@@ -67,7 +67,7 @@ namespace DungeonGenerationDemo
             Defense = 4;
 
             BackgroundColor = ConsoleColor.Black;
-            ForegroundColor = ConsoleColor.White;
+            ForegroundColor = ConsoleColor.Yellow;
         }
 
         public void Paint() 
