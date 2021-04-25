@@ -7,6 +7,9 @@ using System.Numerics;
 
 namespace DungeonGenerationDemo
 {
+    /// <summary>
+    /// A way to store an X,Y coordinate
+    /// </summary>
     struct Point
     {
         public Point(int x, int y)
@@ -67,10 +70,21 @@ namespace DungeonGenerationDemo
             return String.Format("Point({0}, {1})", Col, Row);
         }
 
+        /// <summary>
+        /// Uses pythagorean theorem to determine what the distance is between this point and the point provided
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public double Distance(Point target)
         {
             return Math.Sqrt(Math.Pow(target.Col - Col, 2d) + Math.Pow(target.Row - Row, 2d));
         }
+
+        /// <summary>
+        /// returns a point(vector) that will point in the direction of the target point provided, filtering diagonals
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public Point Normalize(Point target)
         {
             //System.Diagnostics.Debug.Print($"point normalize: this {this} that {target}");

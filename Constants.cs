@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace DungeonGenerationDemo
 {
+    /// <summary>
+    /// Tools for moving objects
+    /// </summary>
     class Constants
     {
         public enum Cardinal
