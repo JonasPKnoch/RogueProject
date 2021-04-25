@@ -170,7 +170,7 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(obj, p);
         }
 
-        private void placeDoor(Point p, Room origin, List<Point> visible)
+        private void placeDoor(Point p, IGenRoom origin, List<Point> visible)
         {
             grid[p.Col, p.Row] = Tile.DOOR;
             gridOrigins[p.Col, p.Row] = origin;
@@ -252,49 +252,56 @@ namespace DungeonGenerationDemo
 
             private void pathStep()
             {
-                List<int> moves = new List<int>();
-
-                if (travelCol > 0)
-                    moves.Add(0);
-                if (travelCol < 0)
-                    moves.Add(1);
-                if (travelRow > 0)
-                    moves.Add(2);
-                if (travelRow < 0)
-                    moves.Add(3);
-
-                if (moves.Count == 0)
-                    return;
-
-                int move = moves[gen.rand.Next(moves.Count)];
-                foreach (int el in moves)
-                {
-                    if (el == prev)
-                    {
-                        if (gen.rand.Next(PATH_DIR_CHANGE) != 0)
-                            move = prev;
-                    }
-                }
-                prev = move;
                 Point last = current;
-                switch (move)
+
+                if (!(adjCheck(new Point(current.Col + 1, current.Row))||
+                    adjCheck(new Point(current.Col - 1, current.Row)) ||
+                    adjCheck(new Point(current.Col, current.Row + 1)) ||
+                    adjCheck(new Point(current.Col, current.Row - 1)))) 
                 {
-                    case 0:
-                        current = new Point(current.Col + 1, current.Row);
-                        travelCol--;
-                        break;
-                    case 1:
-                        current = new Point(current.Col - 1, current.Row);
-                        travelCol++;
-                        break;
-                    case 2:
-                        current = new Point(current.Col, current.Row + 1);
-                        travelRow--;
-                        break;
-                    case 3:
-                        current = new Point(current.Col, current.Row - 1);
-                        travelRow++;
-                        break;
+                    List<int> moves = new List<int>();
+
+                    if (travelCol > 0)
+                        moves.Add(0);
+                    if (travelCol < 0)
+                        moves.Add(1);
+                    if (travelRow > 0)
+                        moves.Add(2);
+                    if (travelRow < 0)
+                        moves.Add(3);
+
+                    if (moves.Count == 0)
+                        return;
+
+                    int move = moves[gen.rand.Next(moves.Count)];
+                    foreach (int el in moves)
+                    {
+                        if (el == prev)
+                        {
+                            if (gen.rand.Next(PATH_DIR_CHANGE) != 0)
+                                move = prev;
+                        }
+                    }
+                    prev = move;
+                    switch (move)
+                    {
+                        case 0:
+                            current = new Point(current.Col + 1, current.Row);
+                            travelCol--;
+                            break;
+                        case 1:
+                            current = new Point(current.Col - 1, current.Row);
+                            travelCol++;
+                            break;
+                        case 2:
+                            current = new Point(current.Col, current.Row + 1);
+                            travelRow--;
+                            break;
+                        case 3:
+                            current = new Point(current.Col, current.Row - 1);
+                            travelRow++;
+                            break;
+                    }
                 }
 
                 if (!active)
@@ -305,7 +312,7 @@ namespace DungeonGenerationDemo
                             active = true;
                             Visible.Add(last);
                             firstDoorVisible.AddRange(originRoom.Visible);
-                            gen.placeDoor(last, originRoom, firstDoorVisible);
+                            gen.placeDoor(last, this, firstDoorVisible);
                             break;
                         case Tile.PATH:
                             originRoom.Connect(gen.gridOrigins[current.Col, current.Row].Origin);
@@ -333,7 +340,7 @@ namespace DungeonGenerationDemo
 
                             List<Point> doorVisible = new List<Point>(Visible);
                             doorVisible.AddRange(foundWall.Visible);
-                            gen.placeDoor(current, foundWall.Origin, doorVisible);
+                            gen.placeDoor(current, this, doorVisible);
 
                             firstDoorVisible.AddRange(Visible);
                             return;
@@ -354,6 +361,24 @@ namespace DungeonGenerationDemo
                 placeWall(new Point(current.Col, current.Row - 1));
 
                 pathStep();
+            }
+
+            private bool adjCheck(Point p)
+            {
+                if (gen.gridOrigins[p.Col, p.Row] == null || gen.gridOrigins[p.Col, p.Row].Origin == Origin)
+                    return false;
+
+                switch (gen.grid[p.Col, p.Row])
+                {
+                    case Tile.DOOR:
+                        current = p;
+                        return true;
+                    case Tile.PATH:
+                        current = p;
+                        return true;
+                }
+
+                return false;
             }
         }
 
