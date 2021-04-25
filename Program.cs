@@ -9,7 +9,7 @@ namespace DungeonGenerationDemo
     {
         static FileManager fm = new FileManager();
         static Generator gen = new Generator(100, 30);
-        static Dungeon dungeon = gen.GetDungeon();
+        static Dungeon dungeon;
         static string[] labels = { "Level: ", "Player: ", "HP: ", "Score: "};
 
         static void Main(string[] args)
@@ -18,7 +18,8 @@ namespace DungeonGenerationDemo
             Console.CursorVisible = false;
             
             gen.Generate(6);
-           
+            dungeon = gen.GetDungeon();
+
             DrawTitleScreen();
             StartMenu();
 
@@ -32,7 +33,7 @@ namespace DungeonGenerationDemo
             Console.SetCursorPosition(7, 33);
             Console.WriteLine($"{labels[0] ,-20} {labels[1] + userName,-12} {labels[2],-6} {labels[3] ,-20}");
 
-            dungeon.PlacePlayer(); // TODO: test code
+            //dungeon.PlacePlayer(); // TODO: test code
             dungeon.PaintAll();
 
             ConsoleKey key;

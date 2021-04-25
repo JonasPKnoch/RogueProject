@@ -19,7 +19,6 @@ namespace DungeonGenerationDemo
         HOR_WALL,
         WALL,
         PATH_WALL,
-        EXIT,
         DOOR
     }
 
@@ -34,24 +33,30 @@ namespace DungeonGenerationDemo
         private const int MIN_ROOM_HEIGHT = 4;
         private const int MAX_ROOM_HEIGHT = 10;
         //Gives the odds the path will change direction. Lower number makes paths curvier
-        private const int PATH_DIR_CHANGE = 0;
+        private const int PATH_DIR_CHANGE = 5;
 
         private Dungeon dungeon;
         private Tile[,] grid;
+        private Room[,] gridOrigins;
         private Random rand;
         private int width;
         private int height;
         private List<Room> rooms;
         private int sets;
-        private List<Monster> monsters; // TODO: if there's time, this will be used to help make monsters move
+        private List<Monster> monsters;
 
         public Generator(int width, int height)
         {
-            dungeon = new Dungeon(width, height);
-            grid = new Tile[width, height];
             this.width = width;
             this.height = height;
             rand = new Random();
+        }
+
+        private void initialize()
+        {
+            dungeon = new Dungeon(width, height);
+            gridOrigins = new Room[width, height];
+            grid = new Tile[width, height];
             rooms = new List<Room>();
             monsters = new List<Monster>();
             dungeon.monsters = monsters;
@@ -85,23 +90,39 @@ namespace DungeonGenerationDemo
         /// <param name="count">Number of rooms to be generated</param>
         public void Generate(int count)
         {
+            initialize();
+
             for (int i = 0; i < count; i++)
             {
-                new Room(this, rand.Next(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH), rand.Next(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT));
-                Point roomCenter = rooms.Last().Center;
-                Monster newMonster = new Monster(roomCenter, rand);
-                dungeon.PlaceObject(newMonster, roomCenter);
+                Room room = new Room(this, rand.Next(MIN_ROOM_WIDTH, MAX_ROOM_WIDTH), rand.Next(MIN_ROOM_HEIGHT, MAX_ROOM_HEIGHT));
+                Point spawn = room.Random();
+                Monster newMonster = new Monster(spawn, rand);
+                dungeon.PlaceObject(newMonster, spawn);
                 monsters.Add(newMonster);
             }
 
-            foreach (Room el in rooms)
+            while (sets > 1)
             {
-                Room near = nearest(el);
+                Room current = rooms[rand.Next(rooms.Count)];
+                Room near = nearest(current);
                 if (near != null)
-                    el.Connect(near);
+                    new Path(this, current, near);
             }
+            Debug.Print(sets.ToString());
 
-            place(Tile.EXIT, getValidPoint());
+            Point point = getValidPoint();
+            dungeon.PlaceObject(new Exit(point, dungeon), point);
+
+
+            point = getValidPoint();
+            Player player = new Player(point, dungeon.rand);
+            dungeon.Player = player;
+            dungeon.PlaceObject(player, point);
+        }
+
+        private void place(Tile tile, Point p)
+        {
+            place(tile, p, null);
         }
 
         /// <summary>
@@ -110,9 +131,10 @@ namespace DungeonGenerationDemo
         /// </summary>
         /// <param name="tile"></param>
         /// <param name="p"></param>
-        private void place(Tile tile, Point p)
+        private void place(Tile tile, Point p, Room origin)
         {
             grid[p.Col, p.Row] = tile;
+            gridOrigins[p.Col, p.Row] = origin;
             StaticTile obj;
             switch (tile)
             {
@@ -137,9 +159,6 @@ namespace DungeonGenerationDemo
                     obj = StaticTile.PathWall(p);
                     grid[p.Col, p.Row] = Tile.EMPTY;
                     break;
-                case Tile.EXIT:
-                    obj = StaticTile.Exit(p);
-                    break;
                 default:
                     obj = new StaticTile(p, false);
                     break;
@@ -148,11 +167,10 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(obj, p);
         }
 
-        //Not being used
-        //private bool pointValid(int x, int y)
-        //{
-        //    return (0 < x && x < width) && (0 < y && y < height);
-        //}
+        private bool pointValid(int x, int y)
+        {
+            return (0 < x && x < width) && (0 < y && y < height);
+        }
 
         private Room nearest(Room room)
         {
@@ -186,6 +204,8 @@ namespace DungeonGenerationDemo
         private class Path
         {
             private Generator gen;
+            private Room originRoom;
+            private Room targetRoom;
             private Point target;
             private Point current;
             private int travelCol;
@@ -195,10 +215,12 @@ namespace DungeonGenerationDemo
 
             public Path(Generator gen, Room r1, Room r2)
             {
+                this.originRoom = r2;
+                this.targetRoom = r1;
                 this.gen = gen;
 
-                target = r1.Center;
-                current = r2.Center;
+                target = r1.Random();
+                current = r2.Random();
 
                 travelCol = target.Col - current.Col;
                 travelRow = target.Row - current.Row;
@@ -209,7 +231,7 @@ namespace DungeonGenerationDemo
             void placeWall(Point p)
             {
                 if (gen.grid[p.Col, p.Row] == Tile.EMPTY)
-                    gen.place(Tile.PATH_WALL, p);
+                    gen.place(Tile.PATH_WALL, p, originRoom);
             }
 
             private void pathStep()
@@ -231,7 +253,7 @@ namespace DungeonGenerationDemo
                 int move = moves[gen.rand.Next(moves.Count)];
                 foreach (int el in moves)
                 {
-                    if(el == prev)
+                    if (el == prev)
                     {
                         if (gen.rand.Next(PATH_DIR_CHANGE) != 0)
                             move = prev;
@@ -261,10 +283,18 @@ namespace DungeonGenerationDemo
 
                 if (!active)
                 {
-                    if (gen.grid[current.Col, current.Row] == Tile.EMPTY)
+                    switch (gen.grid[current.Col, current.Row])
                     {
-                        active = true;
-                        gen.place(Tile.DOOR, last);
+                        case Tile.EMPTY:
+                            active = true;
+                            gen.place(Tile.DOOR, last, originRoom);
+                            break;
+                        case Tile.PATH:
+                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
+                            return;
+                        case Tile.DOOR:
+                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
+                            return;
                     }
                 }
 
@@ -273,12 +303,15 @@ namespace DungeonGenerationDemo
                     switch (gen.grid[current.Col, current.Row])
                     {
                         case Tile.EMPTY:
-                            gen.place(Tile.PATH, current);
+                            gen.place(Tile.PATH, current, originRoom);
                             break;
                         case Tile.WALL:
-                            gen.place(Tile.DOOR, current);
+                            Room foundWall = gen.gridOrigins[current.Col, current.Row];
+                            originRoom.Connect(foundWall);
+                            gen.place(Tile.DOOR, current, foundWall);
                             return;
                         case Tile.PATH:
+                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
                             return;
                     }
                 }
@@ -303,9 +336,11 @@ namespace DungeonGenerationDemo
 
             public Room(Generator gen, int width, int height)
             {
+                Debug.Print("Got here");
                 this.gen = gen;
                 Set = gen.rooms.Count;
                 gen.sets++;
+                Debug.Print($"Set: {Set} created. Total: {gen.sets}");
                 gen.rooms.Add(this);
                 connected = new List<Room>();
 
@@ -353,6 +388,11 @@ namespace DungeonGenerationDemo
                 return (int)Math.Sqrt(Math.Pow(x - closeX, 2) + Math.Pow(y - closeY, 2));
             }
 
+            public Point Random()
+            {
+                return new Point(gen.rand.Next(MinC.Col + 1, MaxC.Col - 1), gen.rand.Next(MinC.Row + 1, MaxC.Row - 1));
+            }
+
             public void Connect(Room other)
             {
                 if (this.connected.Contains(other))
@@ -360,13 +400,23 @@ namespace DungeonGenerationDemo
 
                 if (this.Set != other.Set)
                 {
-                    other.Set = this.Set;
+                    Debug.Print($"Connected {this.Center} ({this.Set}), to {other.Center} ({other.Set}) Total: {gen.sets - 1}");
+                    other.setChange(Set);
                     gen.sets--;
                 }
 
                 this.connected.Add(other);
                 other.connected.Add(this);
-                new Path(gen, this, other);
+            }
+
+            private void setChange(int nextSet)
+            {
+                Set = nextSet;
+                foreach (Room room in connected)
+                {
+                    if (room.Set != nextSet)
+                        room.setChange(nextSet);
+                }
             }
 
             private void place()
@@ -377,27 +427,28 @@ namespace DungeonGenerationDemo
                 {
                     for (int j = 1; j < height - 1; j++)
                     {
-                        gen.place(Tile.FLOOR, new Point(MinC.Col + i, MinC.Row + j));
+                        gen.place(Tile.FLOOR, new Point(MinC.Col + i, MinC.Row + j), this);
                     }
-                }
-                for(int i = 1; i < width - 1; i++)
-                {
-                    gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row));
                 }
 
                 for (int i = 1; i < width - 1; i++)
                 {
-                    gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row + height - 1));
+                    gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row), this);
+                }
+
+                for (int i = 1; i < width - 1; i++)
+                {
+                    gen.place(Tile.HOR_WALL, new Point(MinC.Col + i, MinC.Row + height - 1), this);
                 }
 
                 for (int i = 1; i < height - 1; i++)
                 {
-                    gen.place(Tile.VER_WALL, new Point(MinC.Col, MinC.Row + i));
+                    gen.place(Tile.VER_WALL, new Point(MinC.Col, MinC.Row + i), this);
                 }
 
                 for (int i = 1; i < height - 1; i++)
                 {
-                    gen.place(Tile.VER_WALL, new Point(MinC.Col + width - 1, MinC.Row + i));
+                    gen.place(Tile.VER_WALL, new Point(MinC.Col + width - 1, MinC.Row + i), this);
                 }
             }
         }

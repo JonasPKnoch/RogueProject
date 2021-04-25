@@ -18,6 +18,7 @@ namespace DungeonGenerationDemo
         public int Height { get; }
         public Random rand { get; set; }
         public List<Monster> monsters { get; set; }
+        public bool atExit { get; set; }
 
         public Player Player { get; set; }
 
