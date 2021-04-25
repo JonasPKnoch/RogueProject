@@ -42,7 +42,7 @@ namespace DungeonGenerationDemo
 
         public static StaticTile PathWall(Point p)
         {
-            return new StaticTile(p, true, ' ');
+            return new StaticTile(p, true, '%');
         }
 
         public static StaticTile Exit(Point p)

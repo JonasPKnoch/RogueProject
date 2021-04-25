@@ -37,7 +37,7 @@ namespace DungeonGenerationDemo
 
         private Dungeon dungeon;
         private Tile[,] grid;
-        private Room[,] gridOrigins;
+        private IGenRoom[,] gridOrigins;
         private Random rand;
         private int width;
         private int height;
@@ -55,7 +55,7 @@ namespace DungeonGenerationDemo
         private void initialize()
         {
             dungeon = new Dungeon(width, height);
-            gridOrigins = new Room[width, height];
+            gridOrigins = new IGenRoom[width, height];
             grid = new Tile[width, height];
             rooms = new List<Room>();
             monsters = new List<Monster>();
@@ -108,7 +108,6 @@ namespace DungeonGenerationDemo
                 if (near != null)
                     new Path(this, current, near);
             }
-            Debug.Print(sets.ToString());
 
             Point point = getValidPoint();
             dungeon.PlaceObject(new Exit(point, dungeon), point);
@@ -119,7 +118,7 @@ namespace DungeonGenerationDemo
             Player player = new Player(point, dungeon.rand);
             dungeon.Player = player;
             dungeon.PlaceObject(player, point);
-            dungeon.SetVisible(playerRoom.visible, true);
+            dungeon.SetVisible(playerRoom.Visible, true);
         }
 
         private void place(Tile tile, Point p)
@@ -133,10 +132,11 @@ namespace DungeonGenerationDemo
         /// </summary>
         /// <param name="tile"></param>
         /// <param name="p"></param>
-        private void place(Tile tile, Point p, Room origin)
+        private void place(Tile tile, Point p, IGenRoom origin)
         {
             grid[p.Col, p.Row] = tile;
             gridOrigins[p.Col, p.Row] = origin;
+
             StaticTile obj;
             switch (tile)
             {
@@ -210,7 +210,7 @@ namespace DungeonGenerationDemo
             return false;
         }
 
-        private class Path
+        private class Path : IGenRoom
         {
             private Generator gen;
             private Room originRoom;
@@ -221,7 +221,8 @@ namespace DungeonGenerationDemo
             private int travelRow;
             private bool active;
             private int prev;
-            private List<Point> visible;
+            public List<Point> Visible { get; }
+            public Room Origin { get; }
             private List<Point> firstDoorVisible;
 
             public Path(Generator gen, Room r1, Room r2)
@@ -229,8 +230,9 @@ namespace DungeonGenerationDemo
                 this.originRoom = r2;
                 this.targetRoom = r1;
                 this.gen = gen;
-                visible = new List<Point>();
+                Visible = new List<Point>();
                 firstDoorVisible = new List<Point>();
+                Origin = originRoom;
 
                 target = r1.Random();
                 current = r2.Random();
@@ -244,7 +246,7 @@ namespace DungeonGenerationDemo
             void placeWall(Point p)
             {
                 if (gen.grid[p.Col, p.Row] == Tile.EMPTY)
-                    gen.place(Tile.PATH_WALL, p, originRoom);
+                    gen.place(Tile.PATH_WALL, p, this);
             }
 
             private void pathStep()
@@ -300,15 +302,15 @@ namespace DungeonGenerationDemo
                     {
                         case Tile.EMPTY:
                             active = true;
-                            visible.Add(last);
-                            firstDoorVisible.AddRange(originRoom.visible);
+                            Visible.Add(last);
+                            firstDoorVisible.AddRange(originRoom.Visible);
                             gen.placeDoor(last, originRoom, firstDoorVisible);
                             break;
                         case Tile.PATH:
-                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
+                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row].Origin);
                             return;
                         case Tile.DOOR:
-                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
+                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row].Origin);
                             return;
                     }
                 }
@@ -318,23 +320,29 @@ namespace DungeonGenerationDemo
                     switch (gen.grid[current.Col, current.Row])
                     {
                         case Tile.EMPTY:
-                            gen.place(Tile.PATH, current, originRoom);
-                            visible.Add(current);
+                            gen.place(Tile.PATH, current, this);
+                            Visible.Add(current);
                             break;
                         case Tile.WALL:
-                            Room foundWall = gen.gridOrigins[current.Col, current.Row];
-                            originRoom.Connect(foundWall);
-                            visible.Add(current);
+                            IGenRoom foundWall = gen.gridOrigins[current.Col, current.Row];
+                            originRoom.Connect(foundWall.Origin);
 
-                            List<Point> doorVisible = new List<Point>(visible);
-                            doorVisible.AddRange(foundWall.visible);
-                            gen.placeDoor(current, foundWall, doorVisible);
+                            Visible.Add(current);
+                            firstDoorVisible.AddRange(Visible);
 
-                            firstDoorVisible.AddRange(visible);
+                            List<Point> doorVisible = new List<Point>(Visible);
+                            doorVisible.AddRange(foundWall.Visible);
+                            gen.placeDoor(current, foundWall.Origin, doorVisible);
+
+                            firstDoorVisible.AddRange(Visible);
                             return;
                         case Tile.PATH:
-                            originRoom.Connect(gen.gridOrigins[current.Col, current.Row]);
-                            firstDoorVisible.AddRange(visible);
+                            IGenRoom foundPath = gen.gridOrigins[current.Col, current.Row];
+                            originRoom.Connect(foundPath.Origin);
+
+                            firstDoorVisible.AddRange(Visible);
+                            firstDoorVisible.AddRange(foundPath.Visible);
+                            foundPath.Visible.AddRange(Visible);
                             return;
                     }
                 }
@@ -348,14 +356,15 @@ namespace DungeonGenerationDemo
             }
         }
 
-        private class Room
+        private class Room : IGenRoom
         {
             public Point MinC;
             public Point MaxC;
             public Point Center;
             public int Set;
             public List<Room> connected;
-            public List<Point> visible;
+            public List<Point> Visible { get; }
+            public Room Origin { get; }
             private Generator gen;
 
             public Room(Generator gen, int width, int height)
@@ -367,7 +376,8 @@ namespace DungeonGenerationDemo
                 Debug.Print($"Set: {Set} created. Total: {gen.sets}");
                 gen.rooms.Add(this);
                 connected = new List<Room>();
-                visible = new List<Point>();
+                Visible = new List<Point>();
+                Origin = this;
 
                 do
                 {
@@ -453,7 +463,7 @@ namespace DungeonGenerationDemo
                     for (int j = 1; j < height - 1; j++)
                     {
                         Point p = new Point(MinC.Col + i, MinC.Row + j);
-                        visible.Add(p);
+                        Visible.Add(p);
                         gen.place(Tile.FLOOR, p, this);
                     }
                 }
@@ -461,31 +471,37 @@ namespace DungeonGenerationDemo
                 for (int i = 1; i < width - 1; i++)
                 {
                     Point p = new Point(MinC.Col + i, MinC.Row);
-                    visible.Add(p);
+                    Visible.Add(p);
                     gen.place(Tile.HOR_WALL, p, this);
                 }
 
                 for (int i = 1; i < width - 1; i++)
                 {
                     Point p = new Point(MinC.Col + i, MinC.Row + height - 1);
-                    visible.Add(p);
+                    Visible.Add(p);
                     gen.place(Tile.HOR_WALL, p, this);
                 }
 
                 for (int i = 1; i < height - 1; i++)
                 {
                     Point p = new Point(MinC.Col, MinC.Row + i);
-                    visible.Add(p);
+                    Visible.Add(p);
                     gen.place(Tile.VER_WALL, p, this);
                 }
 
                 for (int i = 1; i < height - 1; i++)
                 {
                     Point p = new Point(MinC.Col + width - 1, MinC.Row + i);
-                    visible.Add(p);
+                    Visible.Add(p);
                     gen.place(Tile.VER_WALL, p, this);
                 }
             }
+        }
+
+        private interface IGenRoom
+        {
+            public List<Point> Visible { get; }
+            public Room Origin { get; }
         }
     }
 }
