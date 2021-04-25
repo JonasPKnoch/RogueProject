@@ -42,18 +42,44 @@ namespace DungeonGenerationDemo
         }
 
         /// <summary>
+        /// Deletes the save file if it exists
+        /// </summary>
+        /// <returns>True if deletd, fasle otherwise</returns>
+        public bool DeleteSavedGame()
+        {
+            try
+            {
+                if (File.Exists($"{folderPath}{savedGameFile}"))
+                {
+                    File.Delete($"{folderPath}{savedGameFile}");
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Problem deleting the file: {savedGameFile}");
+                Console.WriteLine(ex.StackTrace);
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Saves the current player information to a file.
         /// </summary>
         /// <param name="level"></param>
         /// <param name="playerName"></param>
         /// <param name="score"></param>
-        public void SaveGameToFile(int level, string playerName, int score)
+        public void SaveGameToFile(string playerName, int score, int level, int playerHealth)
         {
             try
             {
                 using (StreamWriter writer = new StreamWriter($"{folderPath}{savedGameFile}"))
                 {
-                    writer.Write($"{level},{playerName},{score}");
+                    writer.Write($"{playerName},{score},{level},{playerHealth}");
                 }
             }
             catch (IOException ex)
@@ -67,7 +93,7 @@ namespace DungeonGenerationDemo
         /// Loads the game from the file, adding the information to a
         /// string array.
         /// </summary>
-        /// <returns>Saved information</returns>
+        /// <returns>Saved Game information</returns>
         public string[] LoadGameFromFile()
         {
             if (!File.Exists($"{folderPath}{savedGameFile}"))
@@ -152,12 +178,13 @@ namespace DungeonGenerationDemo
         /// <param name="fileName"></param>
         /// <param name="startLeft"></param>
         /// <param name="startTop"></param>
-        public void PrintFile(string fileName, int startLeft, int startTop)
+        public void PrintFile(string fileName, int startLeft, int startTop, ConsoleColor printColor = ConsoleColor.White)
         {
             try
             {
                 using (StreamReader reader = new StreamReader($"{folderPath}{fileName}"))
                 {
+                    Console.ForegroundColor = printColor;
                     while (!reader.EndOfStream)
                     {
                         string line = reader.ReadLine();
@@ -165,6 +192,7 @@ namespace DungeonGenerationDemo
                         Console.WriteLine(line);
                         startTop++; //Increments position for next line
                     }
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
             }
             catch (FileNotFoundException ex)

@@ -270,6 +270,18 @@ namespace DungeonGenerationDemo
 
         }
 
+        // Test Method
+        public void LoadPlayerHealth(int n)
+        {
+            Player.Health = n;
+        }
+
+        // Test Method
+        public int CurrentPlayerHealth()
+        {
+            return Player.Health;
+        }
+
         /// <summary>
         /// Iterates through the monster list and if a monster is close enough to the player it moves the monster one
         /// square towards the player and attacks if it collides with the player

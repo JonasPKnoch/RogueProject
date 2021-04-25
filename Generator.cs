@@ -59,6 +59,7 @@ namespace DungeonGenerationDemo
             grid = new Tile[width, height];
             rooms = new List<Room>();
             monsters = new List<Monster>();
+            sets = 0;
             dungeon.monsters = monsters;
             dungeon.rand = rand;
         }
