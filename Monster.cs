@@ -6,6 +6,9 @@ using System.Threading;
 
 namespace DungeonGenerationDemo
 {
+    /// <summary>
+    /// A creature that can move toward, attack and be attacked by the player 
+    /// </summary>
     class Monster : ICreature
     {
 
@@ -52,6 +55,9 @@ namespace DungeonGenerationDemo
             ForegroundColor = ConsoleColor.White;
         }
 
+        /// <summary>
+        /// Prints the Display parameter at the Point parameter using the colors BackgroundColor and Foreground color
+        /// </summary>
         public void Paint()
         {
             Console.BackgroundColor = BackgroundColor;
@@ -64,6 +70,11 @@ namespace DungeonGenerationDemo
             Console.ForegroundColor = ConsoleColor.DarkGray;
         }
 
+        /// <summary>
+        /// Sets the Point parameter to the provided coordinates
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <returns></returns>
         public bool Move(Point destination)
         {
             //System.Diagnostics.Debug.Print($"Monster internal move: from {this.Point}, to {destination}");
@@ -71,11 +82,22 @@ namespace DungeonGenerationDemo
             return true;
         }
 
+        /// <summary>
+        /// Checks if the provided coordinates overlap with this object
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         public bool Collision(int x, int y)
         {
             return this.Collision(new Point(x, y));
         }
 
+        /// <summary>
+        /// Checks if the provided point overlaps with this object
+        /// </summary>
+        /// <param name="obstacle"></param>
+        /// <returns></returns>
         public bool Collision(Point obstacle)
         {
             return obstacle == Point;

@@ -234,6 +234,9 @@ namespace DungeonGenerationDemo
             return false;
         }
 
+        /// <summary>
+        /// Creates a new player object and inserts it into the dungeon
+        /// </summary>
         public void PlacePlayer()
         {
 
@@ -255,6 +258,11 @@ namespace DungeonGenerationDemo
 
         }
 
+        /// <summary>
+        /// Gets the health from the player object and displays it on screen
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="col"></param>
         public void DisplayPlayerHealth(int row, int col)
         {
             Console.SetCursorPosition(45, 33);
@@ -262,6 +270,10 @@ namespace DungeonGenerationDemo
 
         }
 
+        /// <summary>
+        /// Iterates through the monster list and if a monster is close enough to the player it moves the monster one
+        /// square towards the player and attacks if it collides with the player
+        /// </summary>
         public void MoveMonsters()
         {
             for( int i = 0; i < monsters.Count; i++)
