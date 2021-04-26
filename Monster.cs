@@ -52,7 +52,7 @@ namespace DungeonGenerationDemo
             Defense = 3;
 
             BackgroundColor = ConsoleColor.Black;
-            ForegroundColor = ConsoleColor.Red;
+            ForegroundColor = ConsoleColor.Green;
         }
 
         /// <summary>
