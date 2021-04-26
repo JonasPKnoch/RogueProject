@@ -36,17 +36,26 @@ namespace DungeonGenerationDemo
         private const int PATH_DIR_CHANGE = 5;
 
         private Dungeon dungeon;
+        //A shorthand used by the generator internally to avoid excessive "is" statements 
         private Tile[,] grid;
         private IGenRoom[,] gridOrigins;
         private Random rand;
         private int width;
         private int height;
+        //These are used for offset
         private int minCol;
         private int minRow;
         private List<Room> rooms;
         private int sets;
         private List<Monster> monsters;
 
+        /// <summary>
+        /// Assigns the unchanging variables of the generator.
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="minCol"></param>
+        /// <param name="minRow"></param>
         public Generator(int width, int height, int minCol, int minRow)
         {
             this.width = width;
@@ -56,6 +65,9 @@ namespace DungeonGenerationDemo
             rand = new Random();
         }
 
+        /// <summary>
+        /// Initializes everything that changes in between calls to "Generate()".
+        /// </summary>
         private void initialize()
         {
             dungeon = new Dungeon(width, height);
@@ -174,6 +186,12 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(obj, p);
         }
 
+        /// <summary>
+        /// Similiar to "place()", but used specifically for doors. Let's you pass visibility list. 
+        /// </summary>
+        /// <param name="p"></param>
+        /// <param name="origin"></param>
+        /// <param name="visible"></param>
         private void placeDoor(Point p, IGenRoom origin, List<Point> visible)
         {
             grid[p.Col, p.Row] = Tile.DOOR;
@@ -181,11 +199,11 @@ namespace DungeonGenerationDemo
             dungeon.PlaceObject(new VisibilityDoor(p, dungeon, visible), p);
         }
 
-        private bool pointValid(int x, int y)
-        {
-            return (0 < x && x < width) && (0 < y && y < height);
-        }
-
+        /// <summary>
+        /// Finds the nearest room to the given room that the given room is not already connected to
+        /// </summary>
+        /// <param name="room"></param>
+        /// <returns>Nearest room not yet connected</returns>
         private Room nearest(Room room)
         {
             int nearestDist = int.MaxValue;
@@ -204,6 +222,11 @@ namespace DungeonGenerationDemo
             return nearest;
         }
 
+        /// <summary>
+        /// Finds if the given room collides with any other room.
+        /// </summary>
+        /// <param name="room"></param>
+        /// <returns></returns>
         private bool anyCollide(Room room)
         {
             foreach (Room el in rooms)
@@ -215,6 +238,18 @@ namespace DungeonGenerationDemo
             return false;
         }
 
+        /// <summary>
+        /// The internal interface used by Path and Room. Stores visibility and the room associated with it. 
+        /// </summary>
+        private interface IGenRoom
+        {
+            public List<Point> Visible { get; }
+            public Room Origin { get; }
+        }
+
+        /// <summary>
+        /// Interally used to carve paths between rooms and handle their visibility. 
+        /// </summary>
         private class Path : IGenRoom
         {
             private Generator gen;
@@ -228,6 +263,7 @@ namespace DungeonGenerationDemo
             private int prev;
             public List<Point> Visible { get; }
             public Room Origin { get; }
+            //The visibility of the first door to be placed. 
             private List<Point> firstDoorVisible;
 
             public Path(Generator gen, Room r1, Room r2)
@@ -248,21 +284,30 @@ namespace DungeonGenerationDemo
                 pathStep();
             }
 
+            /// <summary>
+            /// Places an invisible path wall only if the spot is already empty. 
+            /// </summary>
+            /// <param name="p"></param>
             void placeWall(Point p)
             {
                 if (gen.grid[p.Col, p.Row] == Tile.EMPTY)
                     gen.place(Tile.PATH_WALL, p, this);
             }
 
+            /// <summary>
+            /// Moves the path forward using its current location, previous move, and other info to move, block by block.
+            /// </summary>
             private void pathStep()
             {
                 Point last = current;
 
+                //First checks if it is not already next to another path
                 if (!(adjCheck(new Point(current.Col + 1, current.Row))||
                     adjCheck(new Point(current.Col - 1, current.Row)) ||
                     adjCheck(new Point(current.Col, current.Row + 1)) ||
                     adjCheck(new Point(current.Col, current.Row - 1)))) 
                 {
+                    //If it is not, it will move in a random location within a few contraints
                     List<int> moves = new List<int>();
 
                     if (travelCol > 0)
@@ -308,6 +353,7 @@ namespace DungeonGenerationDemo
                     }
                 }
 
+                ///Only starts pathing once it has left its starting room
                 if (!active)
                 {
                     switch (gen.grid[current.Col, current.Row])
@@ -317,6 +363,10 @@ namespace DungeonGenerationDemo
                             Visible.Add(last);
                             firstDoorVisible.AddRange(originRoom.Visible);
                             gen.placeDoor(last, this, firstDoorVisible);
+                            placeWall(new Point(last.Col + 1, last.Row));
+                            placeWall(new Point(last.Col - 1, last.Row));
+                            placeWall(new Point(last.Col, last.Row + 1));
+                            placeWall(new Point(last.Col, last.Row - 1));
                             break;
                         case Tile.PATH:
                             originRoom.Connect(gen.gridOrigins[current.Col, current.Row].Origin);
@@ -367,6 +417,12 @@ namespace DungeonGenerationDemo
                 pathStep();
             }
 
+            /// <summary>
+            /// Checks if the given spot already has a path that does not belong to the this. 
+            /// If so, it will set the current location to its.
+            /// </summary>
+            /// <param name="p"></param>
+            /// <returns></returns>
             private bool adjCheck(Point p)
             {
                 if (gen.gridOrigins[p.Col, p.Row] == null || gen.gridOrigins[p.Col, p.Row].Origin == Origin)
@@ -386,6 +442,9 @@ namespace DungeonGenerationDemo
             }
         }
 
+        /// <summary>
+        /// Used internally to handle a specific room, and their visibility, valid positioning, ect.
+        /// </summary>
         private class Room : IGenRoom
         {
             public Point MinC;
@@ -420,6 +479,11 @@ namespace DungeonGenerationDemo
                 place();
             }
 
+            /// <summary>
+            /// Finds if the given room overlaps this one.
+            /// </summary>
+            /// <param name="other"></param>
+            /// <returns>True if there is a collision</returns>
             public bool Collide(Room other)
             {
                 if (this.MinC.Col > other.MaxC.Col ||
@@ -431,6 +495,12 @@ namespace DungeonGenerationDemo
                     return true;
             }
 
+            /// <summary>
+            /// Finds the shortest distance between two rooms.
+            /// </summary>
+            /// <param name="x"></param>
+            /// <param name="y"></param>
+            /// <returns></returns>
             public int Dist(int x, int y)
             {
                 int closeX;
@@ -453,11 +523,19 @@ namespace DungeonGenerationDemo
                 return (int)Math.Sqrt(Math.Pow(x - closeX, 2) + Math.Pow(y - closeY, 2));
             }
 
+            /// <summary>
+            /// Returns a random location within the room.
+            /// </summary>
+            /// <returns></returns>
             public Point Random()
             {
                 return new Point(gen.rand.Next(MinC.Col + 1, MaxC.Col - 1), gen.rand.Next(MinC.Row + 1, MaxC.Row - 1));
             }
 
+            /// <summary>
+            /// Does some union-find stuff that keeps track of which rooms are connected.
+            /// </summary>
+            /// <param name="other"></param>
             public void Connect(Room other)
             {
                 if (this.connected.Contains(other))
@@ -474,6 +552,10 @@ namespace DungeonGenerationDemo
                 other.connected.Add(this);
             }
 
+            /// <summary>
+            /// Recursivly changes the set of all connected rooms
+            /// </summary>
+            /// <param name="nextSet"></param>
             private void setChange(int nextSet)
             {
                 Set = nextSet;
@@ -484,6 +566,9 @@ namespace DungeonGenerationDemo
                 }
             }
 
+            /// <summary>
+            /// Actually places the game objects into the dungeon, and into the internal grid.
+            /// </summary>
             private void place()
             {
                 int width = MaxC.Col - MinC.Col;
@@ -526,12 +611,6 @@ namespace DungeonGenerationDemo
                     gen.place(Tile.VER_WALL, p, this);
                 }
             }
-        }
-
-        private interface IGenRoom
-        {
-            public List<Point> Visible { get; }
-            public Room Origin { get; }
         }
     }
 }
