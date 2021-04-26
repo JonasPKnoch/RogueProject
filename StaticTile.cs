@@ -17,7 +17,7 @@ namespace DungeonGenerationDemo
 
         public static StaticTile Floor(Point p)
         {
-            return new StaticTile(p, false, '.');
+            return new StaticTile(p, false, '.', ConsoleColor.DarkGray);
         }
 
         public static StaticTile Path(Point p)
