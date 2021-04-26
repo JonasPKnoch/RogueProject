@@ -67,7 +67,7 @@ namespace DungeonGenerationDemo
             Console.Write(Display);
 
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
         /// <summary>
