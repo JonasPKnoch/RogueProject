@@ -41,14 +41,18 @@ namespace DungeonGenerationDemo
         private Random rand;
         private int width;
         private int height;
+        private int minCol;
+        private int minRow;
         private List<Room> rooms;
         private int sets;
         private List<Monster> monsters;
 
-        public Generator(int width, int height)
+        public Generator(int width, int height, int minCol, int minRow)
         {
             this.width = width;
             this.height = height;
+            this.minCol = minCol;
+            this.minRow = minRow;
             rand = new Random();
         }
 
@@ -407,7 +411,7 @@ namespace DungeonGenerationDemo
 
                 do
                 {
-                    MinC = new Point(gen.rand.Next(gen.width - width - 1), gen.rand.Next(gen.height - height - 1));
+                    MinC = new Point(gen.rand.Next(gen.width - width - 1 - gen.minCol) + gen.minCol, gen.rand.Next(gen.height - height - 1 - gen.minRow) + gen.minRow);
                     MaxC = new Point(MinC.Col + width, MinC.Row + height);
                 } while (gen.anyCollide(this));
 

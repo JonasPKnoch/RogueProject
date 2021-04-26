@@ -29,7 +29,7 @@ namespace DungeonGenerationDemo
         /// </summary>
         public RogueGame()
         {
-            gen = new Generator(120, 30);
+            gen = new Generator(120, 30, 5, 5);
             fm = new FileManager();
 
             stopwatch = new Stopwatch();
