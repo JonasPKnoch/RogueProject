@@ -36,7 +36,7 @@ namespace DungeonGenerationDemo
         public bool Solid { get; }
 
         public Point Point { get; set; }
-        public char Display { get; } = '@';
+        public char Display { get; } = '☻';
         public int Health { get; set; } = 10;
 
         private int attack;
